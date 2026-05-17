@@ -3,8 +3,11 @@ package com.huanchengfly.tieba.post.ui.page.thread
 import android.util.Log
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -98,6 +101,7 @@ import com.huanchengfly.tieba.post.App
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.TiebaApi
 import com.huanchengfly.tieba.post.api.booleanToString
+import com.huanchengfly.tieba.post.api.models.protos.PollInfo
 import com.huanchengfly.tieba.post.api.models.protos.Post
 import com.huanchengfly.tieba.post.api.models.protos.SimpleForum
 import com.huanchengfly.tieba.post.api.models.protos.SubPostList
@@ -911,6 +915,202 @@ fun ThreadPage(
     )
 
     @Composable
+    fun PollWidget(
+        pollInfo: PollInfo,
+        onPollSubmit: (selectedIds: Set<Int>) -> Unit,
+        modifier: Modifier = Modifier
+    ) {
+        var selectedIds by remember { mutableStateOf(setOf<Int>()) }
+        var isSubmit by remember { mutableStateOf(false) }
+
+        LaunchedEffect(pollInfo) {
+            selectedIds = emptySet()
+        }
+
+        val currentTime = (System.currentTimeMillis() / 1000).toInt()
+        val isTimeExpired = pollInfo.end_time in 1..currentTime
+        val showResult =
+            pollInfo.is_polled == 1 || isTimeExpired || pollInfo.status != 0 || LocalAccount.current == null || isSubmit
+
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .background(
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.05f),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .padding(16.dp)
+        ) {
+            // 标题与类型标签
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = pollInfo.title.ifEmpty { "投票" },
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colors.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Text(
+                    text = if (pollInfo.is_multi == 1) "多选" else "单选",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colors.primary,
+                    modifier = Modifier
+                        .background(
+                            MaterialTheme.colors.primary.copy(alpha = 0.1f),
+                            RoundedCornerShape(4.dp)
+                        )
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
+
+            if (pollInfo.tips.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = pollInfo.tips,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            pollInfo.options.forEach { option ->
+                val ratio = option.num.toFloat() / pollInfo.total_poll
+                val animatedProgress by animateFloatAsState(
+                    targetValue = if (showResult) ratio else 0f,
+                    animationSpec = tween(durationMillis = 500),
+                    label = "pollRatioAnim"
+                )
+
+                val isUserVotedOption =
+                    pollInfo.polled_value.split(",").contains(option.id.toString())
+                val isHighlighted =
+                    selectedIds.contains(option.id) || (pollInfo.is_polled == 1 && isUserVotedOption)
+                val itemBackground =
+                    if (isHighlighted) MaterialTheme.colors.primary.copy(alpha = 0.08f) else MaterialTheme.colors.surface
+                val itemBorderColor =
+                    if (isHighlighted) MaterialTheme.colors.primary.copy(alpha = 0.7f) else MaterialTheme.colors.surface.copy(
+                        alpha = 0.15f
+                    )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(itemBackground)
+                        .border(1.dp, itemBorderColor, RoundedCornerShape(8.dp))
+                        .clickable {
+                            if (!showResult) {
+                                selectedIds = if (pollInfo.is_multi != 1) {
+                                    setOf(option.id)
+                                } else {
+                                    if (selectedIds.contains(option.id)) {
+                                        selectedIds - option.id
+                                    } else {
+                                        selectedIds + option.id
+                                    }
+                                }
+                            }
+                        }
+                ) {
+                    if (showResult) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(animatedProgress)
+                                .background(MaterialTheme.colors.primary.copy(alpha = 0.15f))
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = option.text,
+                            fontSize = 14.sp,
+                            color = if (isHighlighted) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
+                            fontWeight = if (isHighlighted) FontWeight.Medium else FontWeight.Normal,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        if (showResult) {
+                            Text(
+                                text = "${option.num}票 (${(ratio * 100).toInt()}%)",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colors.onSurface,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "共有 ${pollInfo.total_num} 人参与",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colors.onSurface
+                )
+
+                if (!showResult) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                if (selectedIds.isNotEmpty()) MaterialTheme.colors.primary
+                                else MaterialTheme.colors.primary.copy(alpha = 0.4f)
+                            )
+                            .debounceClickable(
+                                enabled = selectedIds.isNotEmpty(),
+                                onClick = {
+                                    onPollSubmit(selectedIds)
+                                    isSubmit = true
+                                })
+                            .padding(horizontal = 18.dp, vertical = 6.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "投票",
+                            color = MaterialTheme.colors.onPrimary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                } else {
+                    Text(
+                        text = if (isTimeExpired) "投票已截止" else "已参与投票",
+                        fontSize = 12.sp,
+                        color = if (isTimeExpired) MaterialTheme.colors.error else MaterialTheme.colors.primary,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
     fun PostCard(
         item: ImmutableHolder<Post>,
         contentRenders: ImmutableList<PbContentRender>,
@@ -1406,7 +1606,13 @@ fun ThreadPage(
                                                                 .padding(16.dp)
                                                         )
                                                     }
-
+                                                if (thread?.get { poll_info } != null) {
+                                                    PollWidget(
+                                                        thread?.get { poll_info }!!,
+                                                        {
+                                                            //TODO
+                                                        })
+                                                }
                                                 VerticalDivider(
                                                     modifier = Modifier
                                                         .padding(horizontal = 16.dp)
@@ -2194,7 +2400,7 @@ private fun ThreadMenu(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val account =  LocalAccount.current
+    val account = LocalAccount.current
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
