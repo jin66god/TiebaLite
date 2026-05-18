@@ -851,7 +851,7 @@ fun FeedCard(
     Card(
         header = {
             UserHeader(
-                nameProvider = { item.get { threadInfo.author.name.toString() } },
+                nameProvider = { item.get { threadInfo.author.name }.orEmpty() },
                 nameShowProvider = { item.get { threadInfo.author.showNickName } },
                 portraitProvider = { item.get { threadInfo.author.portrait } },
                 timeProvider = { item.get { threadInfo.createTime.toInt() } },
@@ -875,7 +875,7 @@ fun FeedCard(
             )
             ThreadForumInfo(
                 forumName = item.get { threadInfo.forumName },
-                forumAvatar = null,
+                forumAvatar = item.get { threadInfo.avatar },
                 onClick = { onClickForum(item.get { threadInfo.forumName }) }
             )
         },
