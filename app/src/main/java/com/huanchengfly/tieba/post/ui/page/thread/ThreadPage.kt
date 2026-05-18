@@ -921,16 +921,11 @@ fun ThreadPage(
         modifier: Modifier = Modifier
     ) {
         var selectedIds by remember { mutableStateOf(setOf<Int>()) }
-        var isSubmit by remember { mutableStateOf(false) }
-
-        LaunchedEffect(pollInfo) {
-            selectedIds = emptySet()
-        }
 
         val currentTime = (System.currentTimeMillis() / 1000).toInt()
         val isTimeExpired = pollInfo.end_time in 1..currentTime
         val showResult =
-            pollInfo.is_polled == 1 || isTimeExpired || pollInfo.status != 0 || LocalAccount.current == null || isSubmit
+            pollInfo.is_polled == 1 || isTimeExpired || pollInfo.status != 0 || LocalAccount.current == null
 
         Column(
             modifier = modifier
@@ -1086,7 +1081,6 @@ fun ThreadPage(
                                 enabled = selectedIds.isNotEmpty(),
                                 onClick = {
                                     onPollSubmit(selectedIds)
-                                    isSubmit = true
                                 })
                             .padding(horizontal = 18.dp, vertical = 6.dp),
                         contentAlignment = Alignment.Center
@@ -1606,12 +1600,20 @@ fun ThreadPage(
                                                                 .padding(16.dp)
                                                         )
                                                     }
+
                                                 if (thread?.get { poll_info } != null) {
                                                     PollWidget(
                                                         thread?.get { poll_info }!!,
-                                                        {
-                                                            //TODO
-                                                        })
+                                                        {selectedIds ->
+                                                            viewModel.send(
+                                                                ThreadUiIntent.PollThread(
+                                                                    curForumId,
+                                                                    threadId,
+                                                                    selectedIds.joinToString(separator = ",")
+                                                                )
+                                                            )
+                                                        }
+                                                    )
                                                 }
                                                 VerticalDivider(
                                                     modifier = Modifier

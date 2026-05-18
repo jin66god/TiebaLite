@@ -1,6 +1,7 @@
 package com.huanchengfly.tieba.post.api.retrofit.interfaces
 
 import com.huanchengfly.tieba.post.api.models.protos.addPost.AddPostResponse
+import com.huanchengfly.tieba.post.api.models.protos.addPollPost.AddPollPostReponse
 import com.huanchengfly.tieba.post.api.models.protos.forumGuide.ForumGuideResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRecommend.ForumRecommendResponse
 import com.huanchengfly.tieba.post.api.models.protos.forumRuleDetail.ForumRuleDetailResponse
@@ -133,4 +134,9 @@ interface OfficialProtobufTiebaApi {
     fun getHistoryForumFlow(
         @Body body: MyMultipartBody,
     ): Flow<GetHistoryForumResponse>
+
+    @POST("/c/c/post/addPollPost?cmd=309006&format=protobuf")
+    fun addPollPostProtobuf(
+        @Body body: MyMultipartBody,
+    ): Flow<AddPollPostReponse>
 }
