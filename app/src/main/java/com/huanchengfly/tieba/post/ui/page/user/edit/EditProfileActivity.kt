@@ -104,7 +104,7 @@ import kotlinx.coroutines.flow.onEach
 import java.io.File
 
 @AndroidEntryPoint
-class EditProfileActivity : BaseActivity() {
+class EditProfileActivity : BaseActivity<Nothing>() {
     private val uCropLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == Activity.RESULT_OK) {

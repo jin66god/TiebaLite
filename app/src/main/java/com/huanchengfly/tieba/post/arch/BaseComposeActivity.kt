@@ -55,7 +55,7 @@ abstract class BaseComposeActivityWithData<DATA> : BaseComposeActivity() {
     abstract fun Content(data: DATA)
 }
 
-abstract class BaseComposeActivity : BaseActivity() {
+abstract class BaseComposeActivity : BaseActivity<Nothing>() {
     override val isNeedImmersionBar: Boolean = false
     override val isNeedFixBg: Boolean = false
     override val isNeedSetTheme: Boolean = false

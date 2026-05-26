@@ -4,7 +4,7 @@
 
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+#kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
@@ -16,30 +16,31 @@ dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version =
 [versions]
 
 accompanist = "0.37.3"
-hilt = "2.57.2"
-kotlin = "2.2.20"
+hilt = "2.58"
+kotlin = "2.3.21"
 sketch = "3.3.2"
-wire = "5.4.0"
+wire = "6.4.0"
 
-agp = "8.13.0"
-ksp = "2.2.20-2.0.4"
+agp = "8.13.2"
+ksp = "2.3.8"
+#ksp = "2.2.21-2.0.5"
 
-androidx-activity = "1.11.0"
-androidx-lifecycle = "2.9.4"
-androidx-media3 = "1.8.0"
-androidx-core = "1.17.0"
+androidx-activity = "1.13.0"
+androidx-lifecycle = "2.10.0"
+androidx-media3 = "1.10.1"
+androidx-core = "1.18.0"
 
-compose-bom = "2025.10.00"
+compose-bom = "2026.05.01"
 compose-destinations = "1.11.9"
-androidx-navigation-compose = "2.9.5"
+androidx-navigation-compose = "2.9.8"
 
-airbnb-lottie = "6.6.10"
-kotlinx-coroutines = "1.10.2"
-kotlinx-serialization-json = "1.9.0"
+airbnb-lottie = "6.7.1"
+kotlinx-coroutines = "1.11.0"
+kotlinx-serialization-json = "1.11.0"
 kotlinx-collections-immutable = "0.4.0"
 
-glide = "5.0.5"
-okhttp3 = "5.2.1"
+glide = "5.0.7"
+okhttp3 = "5.3.2"
 retrofit2 = "3.0.0"
 
 [libraries]
@@ -58,7 +59,9 @@ compose-material = { group = "androidx.compose.material", name = "material" }
 compose-material-navigation = { group = "androidx.compose.material", name = "material-navigation" }
 compose-material-icons-core = { group = "androidx.compose.material", name = "material-icons-core" }
 compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
-compose-runtime-tracing = { group = "androidx.compose.runtime", name = "runtime-tracing", version = "1.9.3" }
+compose-runtime-tracing = { group = "androidx.compose.runtime", name = "runtime-tracing", version = "1.11.2" }
+
+#kotlin-metadata-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-metadata-jvm", version.ref = "kotlin" }
 
 # Wire
 wire-runtime = { group = "com.squareup.wire", name = "wire-runtime", version.ref = "wire" }
@@ -88,7 +91,7 @@ compose-destinations-core = { group = "io.github.raamcosta.compose-destinations"
 compose-destinations-ksp = { group = "io.github.raamcosta.compose-destinations", name = "ksp", version.ref = "compose-destinations" }
 
 # Navigation
-androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "androidx-navigation-compose" }
+#androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "androidx-navigation-compose" }
 
 # Hilt
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
@@ -101,7 +104,7 @@ accompanist-drawablepainter = { group = "com.google.accompanist", name = "accomp
 
 # Accompanist Replacements
 eygraber-placeholder-material = { group = "com.eygraber", name = "compose-placeholder-material", version = "1.0.12" }
-systemuibars-tweaker = { group = "com.github.stoyan-vuchev", name = "system-ui-bars-tweaker", version = "1.2.4" }
+systemuibars-tweaker = { group = "com.github.stoyan-vuchev", name = "system-ui-bars-tweaker", version = "1.3.0" }
 
 # Sketch
 sketch-core = { group = "io.github.panpf.sketch3", name = "sketch", version.ref = "sketch" }
@@ -118,10 +121,10 @@ androidx-constraintlayout-compose = { group = "androidx.constraintlayout", name 
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version = "2.2.1" }
 
 # OAID
-github-oaid = { group = "com.github.gzu-liyujiang", name = "Android_CN_OAID", version = "4.2.12" }
+github-oaid = { group = "com.github.gzu-liyujiang", name = "Android_CN_OAID", version = "4.2.17" }
 
 # JetBrains
-org-jetbrains-annotations = { group = "org.jetbrains", name = "annotations", version = "26.0.2-1" }
+org-jetbrains-annotations = { group = "org.jetbrains", name = "annotations", version = "26.1.0" }
 
 # Kotlin
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
@@ -138,16 +141,16 @@ androidx-activity-compose = { group = "androidx.activity", name = "activity-comp
 
 # AndroidX Core
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version = "1.7.1" }
-androidx-annotation = { group = "androidx.annotation", name = "annotation", version = "1.9.1" }
-androidx-browser = { group = "androidx.browser", name = "browser", version = "1.9.0" }
+androidx-annotation = { group = "androidx.annotation", name = "annotation", version = "1.10.0" }
+androidx-browser = { group = "androidx.browser", name = "browser", version = "1.10.0" }
 androidx-core = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core" }
-androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version = "1.2.0-rc01" }
-androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version = "1.1.7" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version = "1.2.0" }
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version = "1.2.1" }
 androidx-gridlayout = { group = "androidx.gridlayout", name = "gridlayout", version = "1.1.0" }
 androidx-palette = { group = "androidx.palette", name = "palette-ktx", version = "1.0.0" }
-androidx-window = { group = "androidx.window", name = "window", version = "1.5.0" }
+androidx-window = { group = "androidx.window", name = "window", version = "1.5.1" }
 androidx-startup-runtime = { group = "androidx.startup", name = "startup-runtime", version = "1.2.0" }
-androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version = "1.1.0" }
+androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version = "1.2.0" }
 
 # Test
 junit-junit = { group = "junit", name = "junit", version = "4.13.2" }
@@ -163,7 +166,7 @@ glide-ksp = { group = "com.github.bumptech.glide", name = "ksp", version.ref = "
 glide-okhttp3-integration = { group = "com.github.bumptech.glide", name = "okhttp3-integration", version.ref = "glide" }
 
 # Google Material
-google-material = { group = "com.google.android.material", name = "material", version = "1.13.0" }
+google-material = { group = "com.google.android.material", name = "material", version = "1.14.0" }
 
 # OkHttp & Retrofit
 okhttp3-core = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp3" }
@@ -171,7 +174,7 @@ retrofit2-core = { group = "com.squareup.retrofit2", name = "retrofit", version.
 retrofit2-converter-wire = { group = "com.squareup.retrofit2", name = "converter-wire", version.ref = "retrofit2" }
 
 # Gson
-google-gson = { group = "com.google.code.gson", name = "gson", version = "2.13.2" }
+google-gson = { group = "com.google.code.gson", name = "gson", version = "2.14.0" }
 
 # LitePal
 org-litepal-android-kotlin = { group = "org.litepal.android", name = "kotlin", version = "3.0.0" }
@@ -183,7 +186,7 @@ com-jaredrummler-colorpicker = { group = "com.jaredrummler", name = "colorpicker
 github-matisse = { group = "com.github.lwj1994", name = "Matisse", version = "0.5.3-20220115" }
 
 # XXPermissions
-xx-permissions = { group = "com.github.getActivity", name = "XXPermissions", version = "26.5" }
+xx-permissions = { group = "com.github.getActivity", name = "XXPermissions", version = "26.8" }
 
 # ImmersionBar
 com-gyf-immersionbar-immersionbar = { group = "com.gyf.immersionbar", name = "immersionbar", version = "3.0.0" }
@@ -192,5 +195,5 @@ com-gyf-immersionbar-immersionbar = { group = "com.gyf.immersionbar", name = "im
 com-github-yalantis-ucrop = { group = "com.github.yalantis", name = "ucrop", version = "2.2.11" }
 
 # ButterKnife
-com-jakewharton-butterknife = { group = "com.jakewharton", name = "butterknife", version = "10.2.3" }
-com-jakewharton-butterknife-compiler = { group = "com.jakewharton", name = "butterknife-compiler", version = "10.2.3" }
+#com-jakewharton-butterknife = { group = "com.jakewharton", name = "butterknife", version = "10.2.3" }
+#com-jakewharton-butterknife-compiler = { group = "com.jakewharton", name = "butterknife-compiler", version = "10.2.3" }
