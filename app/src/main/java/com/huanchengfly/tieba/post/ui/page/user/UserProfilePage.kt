@@ -26,8 +26,6 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.AlertDialog
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
@@ -37,7 +35,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material.Tab
 import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -70,7 +67,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -106,6 +102,8 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.BackNavigationIcon
 import com.huanchengfly.tieba.post.ui.widgets.compose.Button
 import com.huanchengfly.tieba.post.ui.widgets.compose.Chip
 import com.huanchengfly.tieba.post.ui.widgets.compose.ClickMenu
+import com.huanchengfly.tieba.post.ui.widgets.compose.ConfirmDialog
+import com.huanchengfly.tieba.post.ui.widgets.compose.DialogState
 import com.huanchengfly.tieba.post.ui.widgets.compose.ErrorScreen
 import com.huanchengfly.tieba.post.ui.widgets.compose.LazyLoad
 import com.huanchengfly.tieba.post.ui.widgets.compose.LazyLoadHorizontalPager
@@ -119,6 +117,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.Sizes
 import com.huanchengfly.tieba.post.ui.widgets.compose.Switch
 import com.huanchengfly.tieba.post.ui.widgets.compose.Toolbar
 import com.huanchengfly.tieba.post.ui.widgets.compose.UserHeader
+import com.huanchengfly.tieba.post.ui.widgets.compose.rememberDialogState
 import com.huanchengfly.tieba.post.ui.widgets.compose.states.StateScreen
 import com.huanchengfly.tieba.post.utils.AccountUtil.LocalAccount
 import com.huanchengfly.tieba.post.utils.BlockManager
@@ -183,18 +182,14 @@ fun UserProfilePage(
     val isEmpty by remember {
         derivedStateOf { user == null }
     }
-
-    var showPermissionSettingDialogDialog by remember { mutableStateOf(false) }
-
-    if (showPermissionSettingDialogDialog) {
-        PermissionSettingDialogM2(
-            initialPermissionList = permList?.item ?: PermissionListBean(),
-            onDismissRequest = { showPermissionSettingDialogDialog = false },
-            onConfirm = { updatedBean ->
-                viewModel.send(UserProfileUiIntent.SetUserBlack(uid, account!!.tbs, updatedBean))
-            }
-        )
-    }
+    val permissionSettingDialogDialogState = rememberDialogState()
+    PermissionSettingDialogM2(
+        dialogState = permissionSettingDialogDialogState,
+        initialPermissionList = permList?.item ?: PermissionListBean(),
+        onConfirm = { updatedBean ->
+            viewModel.send(UserProfileUiIntent.SetUserBlack(uid, account!!.tbs, updatedBean))
+        }
+    )
 
     ProvideNavigator(navigator = navigator) {
         StateScreen(
@@ -228,7 +223,7 @@ fun UserProfilePage(
                             )
                         )
                     },
-                    onSetUserBlack = { showPermissionSettingDialogDialog = true },
+                    onSetUserBlack = { permissionSettingDialogDialogState.show() },
                 )
             }
         }
@@ -239,8 +234,11 @@ fun UserProfilePage(
 @Preview(showBackground = true)
 @Composable
 fun PreviewPermissionDialog() {
+    val permissionSettingDialogDialogState = rememberDialogState()
+    permissionSettingDialogDialogState.show()
     TiebaLiteTheme {
         PermissionSettingDialogM2(
+            dialogState = permissionSettingDialogDialogState,
             initialPermissionList = PermissionListBean(1, 1, 1),
             onDismissRequest = {},
             onConfirm = {}
@@ -251,123 +249,108 @@ fun PreviewPermissionDialog() {
 @ExperimentalMaterialApi
 @Composable
 fun PermissionSettingDialogM2(
+    dialogState: DialogState,
     initialPermissionList: PermissionListBean,
-    onDismissRequest: () -> Unit,
+    onDismissRequest: (() -> Unit)? = null,
     onConfirm: (PermissionListBean) -> Unit
 ) {
-    // 维护对话框内部的临时状态
-    var currentBean by remember { mutableStateOf(initialPermissionList.copy()) }
-
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        shape = RoundedCornerShape(16.dp),
-        text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "拉黑范围",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colors.primary,
-                    style = MaterialTheme.typography.h6.copy(fontWeight = FontWeight.Bold)
+    var currentBean by remember(initialPermissionList) {
+        mutableStateOf(initialPermissionList.copy())
+    }
+    ConfirmDialog(
+        onConfirm = { onConfirm(currentBean) },
+        dialogState = dialogState,
+        onDismiss = onDismissRequest,
+        title = {
+            Text(
+                stringResource(id = R.string.title_ban_interaction)
+            )
+        }
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // 1. 禁止关注
+            val followChecked = currentBean.follow == 1
+            TextPref(
+                title = stringResource(id = R.string.text_ban_interaction_follow),
+                leadingIcon = {
+                    LeadingIcon {
+                        AvatarIcon(
+                            icon = Icons.Outlined.Block,
+                            size = Sizes.Small,
+                            contentDescription = null,
+                        )
+                    }
+                },
+                textColor = MaterialTheme.colors.onBackground,
+                onClick = {
+                    val next = !followChecked
+                    currentBean = currentBean.copy(follow = if (next) 1 else 0)
+                }
+            ) {
+                Switch(
+                    checked = followChecked,
+                    onCheckedChange = { isChecked ->
+                        currentBean = currentBean.copy(follow = if (isChecked) 1 else 0)
+                    }
                 )
-                Spacer(modifier = Modifier.height(5.dp))
-                // 1. 禁止关注
-                val followChecked = currentBean.follow == 1
-                TextPref(
-                    title = "禁止TA关注我",
-                    leadingIcon = {
-                        LeadingIcon {
-                            AvatarIcon(
-                                icon = Icons.Outlined.Block,
-                                size = Sizes.Small,
-                                contentDescription = null,
-                            )
-                        }
-                    },
-                    textColor = MaterialTheme.colors.onBackground,
-                    onClick = {
-                        val next = !followChecked
-                        currentBean = currentBean.copy(follow = if (next) 1 else 0)
-                    }
-                ) {
-                    Switch(
-                        checked = followChecked,
-                        onCheckedChange = { isChecked ->
-                            currentBean = currentBean.copy(follow = if (isChecked) 1 else 0)
-                        }
-                    )
-                }
-
-                // 2. 禁止互动
-                val interactChecked = currentBean.interact == 1
-                TextPref(
-                    title = "禁止TA互动",
-                    leadingIcon = {
-                        LeadingIcon {
-                            AvatarIcon(
-                                icon = Icons.Outlined.Block,
-                                size = Sizes.Small,
-                                contentDescription = null,
-                            )
-                        }
-                    },
-                    textColor = MaterialTheme.colors.onBackground,
-                    summary = "包含转,评,赞踩,@",
-                    onClick = {
-                        val next = !interactChecked
-                        currentBean = currentBean.copy(interact = if (next) 1 else 0)
-                    }
-                ) {
-                    Switch(
-                        checked = interactChecked,
-                        onCheckedChange = { isChecked ->
-                            currentBean = currentBean.copy(interact = if (isChecked) 1 else 0)
-                        }
-                    )
-                }
-
-                // 3. 禁止私信
-                val chatChecked = currentBean.chat == 1
-                TextPref(
-                    title = "禁止TA私信",
-                    leadingIcon = {
-                        LeadingIcon {
-                            AvatarIcon(
-                                icon = Icons.Outlined.Block,
-                                size = Sizes.Small,
-                                contentDescription = null,
-                            )
-                        }
-                    },
-                    textColor = MaterialTheme.colors.onBackground,
-                    onClick = {
-                        val next = !chatChecked
-                        currentBean = currentBean.copy(chat = if (next) 1 else 0)
-                    }
-                ) {
-                    Switch(
-                        checked = chatChecked,
-                        onCheckedChange = { isChecked ->
-                            currentBean = currentBean.copy(chat = if (isChecked) 1 else 0)
-                        }
-                    )
-                }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                onConfirm(currentBean)
-                onDismissRequest()
-            }) {
-                Text("确定", fontWeight = FontWeight.Bold)
+
+            // 2. 禁止互动
+            val interactChecked = currentBean.interact == 1
+            TextPref(
+                title = stringResource(id = R.string.text_ban_interaction_interact),
+                leadingIcon = {
+                    LeadingIcon {
+                        AvatarIcon(
+                            icon = Icons.Outlined.Block,
+                            size = Sizes.Small,
+                            contentDescription = null,
+                        )
+                    }
+                },
+                textColor = MaterialTheme.colors.onBackground,
+                summary = stringResource(id = R.string.tip_ban_interaction_interact),
+                onClick = {
+                    val next = !interactChecked
+                    currentBean = currentBean.copy(interact = if (next) 1 else 0)
+                }
+            ) {
+                Switch(
+                    checked = interactChecked,
+                    onCheckedChange = { isChecked ->
+                        currentBean = currentBean.copy(interact = if (isChecked) 1 else 0)
+                    }
+                )
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text("取消")
+
+            // 3. 禁止私信
+            val chatChecked = currentBean.chat == 1
+            TextPref(
+                title = stringResource(id = R.string.text_ban_interaction_chat),
+                leadingIcon = {
+                    LeadingIcon {
+                        AvatarIcon(
+                            icon = Icons.Outlined.Block,
+                            size = Sizes.Small,
+                            contentDescription = null,
+                        )
+                    }
+                },
+                textColor = MaterialTheme.colors.onBackground,
+                onClick = {
+                    val next = !chatChecked
+                    currentBean = currentBean.copy(chat = if (next) 1 else 0)
+                }
+            ) {
+                Switch(
+                    checked = chatChecked,
+                    onCheckedChange = { isChecked ->
+                        currentBean = currentBean.copy(chat = if (isChecked) 1 else 0)
+                    }
+                )
             }
         }
-    )
+    }
 }
 
 @Composable

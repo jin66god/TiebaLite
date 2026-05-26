@@ -46,6 +46,11 @@
     <string name="title_white_list">白名单</string>
     <string name="title_add_black">添加黑名单</string>
     <string name="title_add_white">添加白名单</string>
+    <string name="title_ban_interaction">拉黑范围</string>
+    <string name="text_ban_interaction_follow">禁止TA关注我</string>
+    <string name="text_ban_interaction_interact">禁止TA互动</string>
+    <string name="tip_ban_interaction_interact">包含转,评,赞踩,@</string>
+    <string name="text_ban_interaction_chat">禁止TA私信</string>
     <string name="title_main">首页</string>
     <string name="title_jump_page">跳页</string>
     <string name="tip_jump_page">当前 %1$d/%2$d 页</string>
