@@ -1,25 +1,11 @@
-package com.huanchengfly.tieba.post.models.database;
+package com.huanchengfly.tieba.post.models.database
 
-import org.litepal.crud.LitePalSupport;
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-public class TopForum extends LitePalSupport {
-    private String forumId;
-    private int id;
-
-    public TopForum(String forumId) {
-        this.forumId = forumId;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getForumId() {
-        return forumId;
-    }
-
-    public TopForum setForumId(String forumId) {
-        this.forumId = forumId;
-        return this;
-    }
-}
+@Entity(tableName = "topforum")
+data class TopForum(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @ColumnInfo(name = "forumid") val forumId: String,
+)

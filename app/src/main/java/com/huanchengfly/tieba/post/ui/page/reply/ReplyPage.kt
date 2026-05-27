@@ -81,6 +81,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.widget.addTextChangedListener
 import com.github.panpf.sketch.compose.AsyncImage
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
+import com.huanchengfly.tieba.post.App
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.arch.GlobalEvent
 import com.huanchengfly.tieba.post.arch.collectPartialAsState
@@ -108,6 +109,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.VerticalDivider
 import com.huanchengfly.tieba.post.ui.widgets.compose.rememberDialogState
 import com.huanchengfly.tieba.post.ui.widgets.edittext.widget.UndoableEditText
 import com.huanchengfly.tieba.post.utils.AccountUtil
+import com.huanchengfly.tieba.post.utils.DatabaseUtil
 import com.huanchengfly.tieba.post.utils.Emoticon
 import com.huanchengfly.tieba.post.utils.EmoticonManager
 import com.huanchengfly.tieba.post.utils.PickMediasRequest
@@ -120,17 +122,14 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.spec.DestinationStyleBottomSheet
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
-import org.litepal.LitePal
-import org.litepal.extension.deleteAllAsync
-import org.litepal.extension.findFirstAsync
 import java.util.UUID
-import kotlin.concurrent.thread
 import kotlin.math.max
 
 data class ReplyArgs(
@@ -272,19 +271,15 @@ internal fun ReplyPageContent(
             .collect {
                 Log.i("ReplyPage", "collect: $it")
                 if (!replySuccess) {
-                    thread {
-                        Draft(hash, it).saveOrUpdate("hash = ?", hash)
-                    }
+                    DatabaseUtil.saveDraft(hash, it)
                 }
             }
     }
     LaunchedEffect(Unit) {
-        LitePal.where("hash = ?", hash).findFirstAsync<Draft?>()
-            .listen {
-                if (it != null) {
-                    setText(it.content)
-                }
-            }
+        val draft = DatabaseUtil.getDraft(hash)
+        if (draft != null) {
+            setText(draft.content)
+        }
     }
     val textLength by remember { derivedStateOf { curText.length } }
     val isTextEmpty by remember { derivedStateOf { curText.isEmpty() } }
@@ -304,7 +299,10 @@ internal fun ReplyPageContent(
         } else {
             context.toastShort(R.string.toast_reply_success, it.expInc)
         }
-        LitePal.deleteAllAsync<Draft>("hash = ?", hash).listen { onBack() }
+        coroutineScope.launch {
+            DatabaseUtil.deleteDraft(hash)
+            onBack()
+        }
     }
 
     var waitUploadSuccessToSend by remember { mutableStateOf(false) }

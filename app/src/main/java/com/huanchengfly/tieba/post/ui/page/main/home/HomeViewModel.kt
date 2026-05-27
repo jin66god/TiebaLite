@@ -14,7 +14,9 @@ import com.huanchengfly.tieba.post.arch.UiIntent
 import com.huanchengfly.tieba.post.arch.UiState
 import com.huanchengfly.tieba.post.models.database.History
 import com.huanchengfly.tieba.post.models.database.TopForum
+import com.huanchengfly.tieba.post.App
 import com.huanchengfly.tieba.post.utils.AccountUtil
+import com.huanchengfly.tieba.post.utils.DatabaseUtil
 import com.huanchengfly.tieba.post.utils.HistoryUtil
 import com.huanchengfly.tieba.post.utils.FollowedForumsCache
 import kotlinx.collections.immutable.ImmutableList
@@ -33,7 +35,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.zip
-import org.litepal.LitePal
 
 @Stable
 class HomeViewModel : BaseViewModel<HomeUiIntent, HomePartialChange, HomeUiState, HomeUiEvent>() {
@@ -91,7 +92,7 @@ class HomeViewModel : BaseViewModel<HomeUiIntent, HomePartialChange, HomeUiState
                 // 全局缓存更新
                 FollowedForumsCache.updateAll(allLikeForums)
 
-                val topForumsDB = LitePal.findAll(TopForum::class.java).map { it.forumId }.toSet()
+                val topForumsDB = DatabaseUtil.getTopForums().map { it.forumId }.toSet()
                 val topForums = forums.filter { it.forumId in topForumsDB }
                 HomePartialChange.Refresh.Success(
                     forums,
@@ -109,24 +110,16 @@ class HomeViewModel : BaseViewModel<HomeUiIntent, HomePartialChange, HomeUiState
                 .catch { emit(HomePartialChange.RefreshHistory.Failure(it)) }
 
         private fun HomeUiIntent.TopForums.Delete.toPartialChangeFlow() =
-            flow {
-                val deletedRows = LitePal.deleteAll(TopForum::class.java, "forumId = ?", forumId)
-                if (deletedRows > 0) {
-                    emit(HomePartialChange.TopForums.Delete.Success(forumId))
-                } else {
-                    emit(HomePartialChange.TopForums.Delete.Failure("forum $forumId is not top!"))
-                }
+            flow<HomePartialChange.TopForums.Delete> {
+                DatabaseUtil.deleteTopForum(forumId)
+                emit(HomePartialChange.TopForums.Delete.Success(forumId))
             }.flowOn(Dispatchers.IO)
                 .catch { emit(HomePartialChange.TopForums.Delete.Failure(it.getErrorMessage())) }
 
         private fun HomeUiIntent.TopForums.Add.toPartialChangeFlow() =
-            flow {
-                val success = TopForum(forum.forumId).saveOrUpdate("forumId = ?", forum.forumId)
-                if (success) {
-                    emit(HomePartialChange.TopForums.Add.Success(forum))
-                } else {
-                    emit(HomePartialChange.TopForums.Add.Failure("未知错误"))
-                }
+            flow<HomePartialChange.TopForums.Add> {
+                DatabaseUtil.addTopForum(forum.forumId)
+                emit(HomePartialChange.TopForums.Add.Success(forum))
             }.flowOn(Dispatchers.IO)
                 .catch { emit(HomePartialChange.TopForums.Add.Failure(it.getErrorMessage())) }
 

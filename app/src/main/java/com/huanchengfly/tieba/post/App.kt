@@ -38,6 +38,7 @@ import com.github.panpf.sketch.request.PauseLoadWhenScrollingDrawableDecodeInter
 import com.github.panpf.sketch.request.internal.RequestContext
 import com.huanchengfly.tieba.post.components.ClipBoardLinkDetector
 import com.huanchengfly.tieba.post.components.OAIDGetter
+
 import com.huanchengfly.tieba.post.ui.common.theme.compose.dynamicTonalPalette
 import com.huanchengfly.tieba.post.ui.common.theme.interfaces.ThemeSwitcher
 import com.huanchengfly.tieba.post.ui.common.theme.utils.ThemeUtils
@@ -53,9 +54,9 @@ import com.huanchengfly.tieba.post.utils.appPreferences
 import com.huanchengfly.tieba.post.utils.applicationMetaData
 import com.huanchengfly.tieba.post.utils.packageInfo
 import dagger.hilt.android.HiltAndroidApp
-import org.litepal.LitePal
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
+import kotlinx.coroutines.runBlocking
 
 
 @HiltAndroidApp
@@ -89,7 +90,6 @@ class App : Application(), SketchFactory {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             setWebViewPath(this)
         }
-        LitePal.initialize(this)
         AccountUtil.init(this)
         Config.init(this)
         val isSelfBuild = applicationMetaData.getBoolean("is_self_build")
@@ -99,7 +99,7 @@ class App : Application(), SketchFactory {
         registerActivityLifecycleCallbacks(ClipBoardLinkDetector)
         registerActivityLifecycleCallbacks(OAIDGetter)
         thread {
-            BlockManager.init()
+            runBlocking { BlockManager.init() }
             EmoticonManager.init(this@App)
         }
     }

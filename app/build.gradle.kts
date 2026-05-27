@@ -260,7 +260,9 @@ dependencies {
     implementation(libs.retrofit2.converter.wire)
 
     implementation(libs.google.gson)
-    implementation(libs.org.litepal.android.kotlin)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
     implementation(libs.com.jaredrummler.colorpicker)
 
     implementation(libs.github.matisse)
