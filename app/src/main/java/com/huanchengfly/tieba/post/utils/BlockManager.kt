@@ -22,9 +22,11 @@ object BlockManager {
     val whiteList: List<Block>
         get() = blockList.filter { it.category == Block.CATEGORY_WHITE_LIST }
 
-    suspend fun addBlock(block: Block) {
-        DatabaseUtil.insertBlock(block)
-        blockList.add(block)
+    suspend fun addBlock(block: Block): Block {
+        val id = DatabaseUtil.insertBlock(block)
+        val savedBlock = block.copy(id = id)
+        blockList.add(savedBlock)
+        return savedBlock
     }
 
     fun addBlockAsync(
@@ -32,8 +34,9 @@ object BlockManager {
         callback: ((Boolean) -> Unit)? = null,
     ) {
         GlobalScope.launch(Dispatchers.IO) {
-            DatabaseUtil.insertBlock(block)
-            blockList.add(block)
+            val id = DatabaseUtil.insertBlock(block)
+            val savedBlock = block.copy(id = id)
+            blockList.add(savedBlock)
             callback?.invoke(true)
         }
     }

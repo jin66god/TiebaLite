@@ -84,11 +84,11 @@ object AccountUtil {
         return currentAccount?.getter()
     }
 
-    fun newAccount(uid: String, account: Account, callback: (Boolean) -> Unit) {
+    fun newAccount(uid: String, account: Account, callback: (Long) -> Unit) {
         GlobalScope.launch(Dispatchers.IO) {
-            DatabaseUtil.upsertAccountByUid(account)
+            val newId = DatabaseUtil.upsertAccountByUid(account)
             mutableAllAccountsState.value = DatabaseUtil.getAllAccounts()
-            callback(true)
+            callback(newId)
         }
     }
 

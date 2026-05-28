@@ -56,7 +56,7 @@ object DatabaseUtil {
 
     fun getAllBlocksFlow(): Flow<List<Block>> = appDatabase.blockDao().getAllFlow()
 
-    suspend fun insertBlock(block: Block) = appDatabase.blockDao().insert(block)
+    suspend fun insertBlock(block: Block): Long = appDatabase.blockDao().insert(block)
 
     suspend fun deleteBlockById(id: Long) = appDatabase.blockDao().deleteById(id)
 

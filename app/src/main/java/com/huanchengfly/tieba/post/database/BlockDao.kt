@@ -16,7 +16,7 @@ interface BlockDao {
     suspend fun getAll(): List<Block>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(block: Block)
+    suspend fun insert(block: Block): Long
 
     @Query("DELETE FROM block WHERE id = :id")
     suspend fun deleteById(id: Long)

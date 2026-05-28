@@ -24,8 +24,8 @@ interface AccountDao {
     @Query("SELECT * FROM account WHERE bduss = :bduss LIMIT 1")
     suspend fun getByBduss(bduss: String): Account?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOrReplace(account: Account): Long
+    @Insert
+    suspend fun insert(account: Account): Long
 
     @Update
     suspend fun update(account: Account)
@@ -40,12 +40,13 @@ interface AccountDao {
     fun getAllFlow(): Flow<List<Account>>
 
     @Transaction
-    suspend fun upsertByUid(account: Account) {
+    suspend fun upsertByUid(account: Account): Long {
         val existing = getByUid(account.uid)
-        if (existing != null) {
+        return if (existing != null) {
             update(account.copy(id = existing.id))
+            existing.id.toLong()
         } else {
-            insertOrReplace(account)
+            insert(account.copy(id = 0))
         }
     }
 }
