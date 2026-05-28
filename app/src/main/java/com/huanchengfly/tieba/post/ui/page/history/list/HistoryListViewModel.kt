@@ -74,29 +74,39 @@ private class HistoryListPartialChangeProducer(val type: Int) :
 
     private fun produceDeleteAllPartialChange() = flowOf(HistoryListPartialChange.DeleteAll)
 
-    private fun produceRefreshPartialChange() =
-        HistoryUtil.getFlow(type, 0)
-            .map<List<History>, HistoryListPartialChange.Refresh> { histories ->
+    private fun produceRefreshPartialChange(): Flow<HistoryListPartialChange.Refresh> =
+        flow<HistoryListPartialChange.Refresh> {
+            val histories = HistoryUtil.get(type, 0)
+            emit(
                 HistoryListPartialChange.Refresh.Success(
-                    histories.filter { DateTimeUtils.isToday(it.timestamp) },
-                    histories.filterNot { DateTimeUtils.isToday(it.timestamp) },
-                    histories.size == HistoryUtil.PAGE_SIZE,
+                    todayHistoryData = histories.filter { DateTimeUtils.isToday(it.timestamp) },
+                    beforeHistoryData = histories.filterNot { DateTimeUtils.isToday(it.timestamp) },
+                    hasMore = histories.size == HistoryUtil.PAGE_SIZE,
                 )
-            }
-            .catch { HistoryListPartialChange.Refresh.Failure(it) }
+            )
+        }
+            .flowOn(Dispatchers.IO)
+            .catch { emit(HistoryListPartialChange.Refresh.Failure(it)) }
 
-    private fun HistoryListUiIntent.LoadMore.producePartialChange() =
-        HistoryUtil.getFlow(type, page)
-            .map<List<History>, HistoryListPartialChange.LoadMore> { histories ->
+    private fun HistoryListUiIntent.LoadMore.producePartialChange(): Flow<HistoryListPartialChange.LoadMore> =
+        flow<HistoryListPartialChange.LoadMore> {
+            val histories = HistoryUtil.get(type, page)
+            emit(
                 HistoryListPartialChange.LoadMore.Success(
-                    histories.filter { DateTimeUtils.isToday(it.timestamp) },
-                    histories.filterNot { DateTimeUtils.isToday(it.timestamp) },
-                    histories.size == HistoryUtil.PAGE_SIZE,
-                    page
+                    todayHistoryData = histories.filter { DateTimeUtils.isToday(it.timestamp) },
+                    beforeHistoryData = histories.filterNot { DateTimeUtils.isToday(it.timestamp) },
+                    hasMore = histories.size == HistoryUtil.PAGE_SIZE,
+                    currentPage = page
                 )
+            )
+        }
+            .onStart {
+                emit(HistoryListPartialChange.LoadMore.Start)
             }
-            .onStart { HistoryListPartialChange.LoadMore.Start }
-            .catch { HistoryListPartialChange.LoadMore.Failure(it) }
+            .flowOn(Dispatchers.IO)
+            .catch {
+                emit(HistoryListPartialChange.LoadMore.Failure(it))
+            }
 
     private fun HistoryListUiIntent.Delete.producePartialChange() =
         flow<HistoryListPartialChange.Delete> {

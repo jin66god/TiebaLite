@@ -39,11 +39,11 @@ object DatabaseUtil {
     // ── History ─────────────────────────────────────────────────
     suspend fun getAllHistory(): List<History> = appDatabase.historyDao().getAll()
 
-    suspend fun getHistoryByType(type: Int, pageSize: Int = 100): List<History> =
-        appDatabase.historyDao().getAllByType(type, pageSize)
+    suspend fun getHistoryByType(type: Int, pageSize: Int = 100, offset: Int = 0): List<History> =
+        appDatabase.historyDao().getByType(type, pageSize, offset)
 
-    fun getHistoryFlowByType(type: Int, pageSize: Int = 100): Flow<List<History>> =
-        appDatabase.historyDao().getFlowByType(type, pageSize)
+    fun getHistoryFlowByType(type: Int, pageSize: Int = 100, offset: Int = 0): Flow<List<History>> =
+        appDatabase.historyDao().getFlowByType(type, pageSize, offset)
 
     suspend fun upsertHistory(history: History) = appDatabase.historyDao().upsert(history)
 
