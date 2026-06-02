@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -104,6 +103,8 @@ import com.huanchengfly.tieba.post.ui.page.ProvideNavigator
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumDetailPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ForumSearchPostPageDestination
 import com.huanchengfly.tieba.post.ui.page.destinations.ReplyPageDestination
+import com.huanchengfly.tieba.post.ui.page.forum.generaltablist.GeneralTabListPage
+import com.huanchengfly.tieba.post.ui.page.forum.generaltablist.GeneralTabListUiEvent
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListPage
 import com.huanchengfly.tieba.post.ui.page.forum.threadlist.ForumThreadListUiEvent
 import com.huanchengfly.tieba.post.ui.widgets.compose.Avatar
@@ -114,6 +115,7 @@ import com.huanchengfly.tieba.post.ui.widgets.compose.ClickMenu
 import com.huanchengfly.tieba.post.ui.widgets.compose.ConfirmDialog
 import com.huanchengfly.tieba.post.ui.widgets.compose.FeedCardPlaceholder
 import com.huanchengfly.tieba.post.ui.widgets.compose.LazyLoad
+import com.huanchengfly.tieba.post.ui.widgets.compose.LazyLoadHorizontalPager
 import com.huanchengfly.tieba.post.ui.widgets.compose.MenuScope
 import com.huanchengfly.tieba.post.ui.widgets.compose.MyScaffold
 import com.huanchengfly.tieba.post.ui.widgets.compose.PagerTabIndicator
@@ -137,9 +139,9 @@ import com.ramcosta.composedestinations.annotation.DeepLink
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.math.absoluteValue
 import kotlin.math.max
@@ -443,9 +445,18 @@ fun ForumPage(
         initial = null
     )
     val tbs by viewModel.uiState.collectPartialAsState(prop1 = ForumUiState::tbs, initial = null)
+    val navTabInfo by viewModel.uiState.collectPartialAsState(
+        prop1 = ForumUiState::navTabInfo,
+        initial = null
+    )
+    val generalTabs by remember {
+        derivedStateOf {
+            navTabInfo?.tab?.filter { it.isGeneralTab == 1 }?.filter { it.tabType == 15 } ?: emptyList()
+        }
+    }
 
     val account = LocalAccount.current
-    val pagerState = rememberPagerState { 2 }
+    val pagerState = rememberPagerState(pageCount = { 2 + generalTabs.size })
     val latestListState = rememberLazyListState()
     val goodListState = rememberLazyListState()
 
@@ -481,7 +492,7 @@ fun ForumPage(
     }
 
     val enablePullToRefresh by remember {
-        derivedStateOf { isListAtTop && isHeaderExpanded }
+        derivedStateOf { currentPage < 2 && isListAtTop && isHeaderExpanded }
     }
 
     val isShowTopBarArea by remember {
@@ -529,20 +540,25 @@ fun ForumPage(
 
     onGlobalEvent<GlobalEvent.AddThreadSuccess>() {
         coroutineScope.launch {
-            emitGlobalEventSuspend(
-                ForumThreadListUiEvent.BackToTop(
-                    currentPage == 1
-                )
-            )
-            emitGlobalEventSuspend(
-                ForumThreadListUiEvent.Refresh(
-                    currentPage == 1,
-                    getSortType(
-                        context,
-                        forumName
+            if (currentPage >= 2) {
+                emitGlobalEvent(GeneralTabListUiEvent.BackToTop)
+                emitGlobalEvent(GeneralTabListUiEvent.Refresh())
+            } else {
+                emitGlobalEventSuspend(
+                    ForumThreadListUiEvent.BackToTop(
+                        currentPage == 1
                     )
                 )
-            )
+                emitGlobalEventSuspend(
+                    ForumThreadListUiEvent.Refresh(
+                        currentPage == 1,
+                        getSortType(
+                            context,
+                            forumName
+                        )
+                    )
+                )
+            }
         }
     }
 
@@ -651,30 +667,39 @@ fun ForumPage(
                                 when (context.appPreferences.forumFabFunction) {
                                     "refresh" -> {
                                         coroutineScope.launch {
-                                            emitGlobalEventSuspend(
-                                                ForumThreadListUiEvent.BackToTop(
-                                                    currentPage == 1
-                                                )
-                                            )
-                                            emitGlobalEventSuspend(
-                                                ForumThreadListUiEvent.Refresh(
-                                                    currentPage == 1,
-                                                    getSortType(
-                                                        context,
-                                                        forumName
+                                            if (currentPage >= 2) {
+                                                emitGlobalEvent(GeneralTabListUiEvent.BackToTop)
+                                                emitGlobalEvent(GeneralTabListUiEvent.Refresh())
+                                            } else {
+                                                emitGlobalEventSuspend(
+                                                    ForumThreadListUiEvent.BackToTop(
+                                                        currentPage == 1
                                                     )
                                                 )
-                                            )
+                                                emitGlobalEventSuspend(
+                                                    ForumThreadListUiEvent.Refresh(
+                                                        currentPage == 1,
+                                                        getSortType(
+                                                            context,
+                                                            forumName
+                                                        )
+                                                    )
+                                                )
+                                            }
                                         }
                                     }
 
                                     "back_to_top" -> {
                                         coroutineScope.launch {
-                                            emitGlobalEvent(
-                                                ForumThreadListUiEvent.BackToTop(
-                                                    currentPage == 1
+                                            if (currentPage >= 2) {
+                                                emitGlobalEvent(GeneralTabListUiEvent.BackToTop)
+                                            } else {
+                                                emitGlobalEvent(
+                                                    ForumThreadListUiEvent.BackToTop(
+                                                        currentPage == 1
+                                                    )
                                                 )
-                                            )
+                                            }
                                         }
                                     }
 
@@ -924,22 +949,98 @@ fun ForumPage(
                                         )
                                     }
                                 }
+                                generalTabs.forEach { tab ->
+                                    val tabIndex = 2 + generalTabs.indexOf(tab)
+                                    var currentSortIndex by remember(tab.tabId) {
+                                        mutableIntStateOf(0)
+                                    }
+                                    if (tab.sort_menu.isNotEmpty()) {
+                                        TabClickMenu(
+                                            selected = currentPage == tabIndex,
+                                            onClick = {
+                                                coroutineScope.launch {
+                                                    pagerState.animateScrollToPage(tabIndex)
+                                                }
+                                            },
+                                            text = {
+                                                Text(
+                                                    text = tab.tabName,
+                                                    style = tabTextStyle
+                                                )
+                                            },
+                                            menuContent = {
+                                                ListSinglePicker(
+                                                    itemTitles = tab.sort_menu.map { it.text }.toImmutableList(),
+                                                    itemValues = tab.sort_menu.map { it.source_id }.toImmutableList(),
+                                                    selectedPosition = currentSortIndex,
+                                                    onItemSelected = { position, _, value, changed ->
+                                                        if (changed) {
+                                                            currentSortIndex = position
+                                                            coroutineScope.launch {
+                                                                emitGlobalEvent(GeneralTabListUiEvent.Refresh(sortType = value))
+                                                            }
+                                                        }
+                                                        dismiss()
+                                                    }
+                                                )
+                                            },
+                                            selectedContentColor = ExtendedTheme.colors.primary,
+                                            unselectedContentColor = ExtendedTheme.colors.textSecondary
+                                        )
+                                    } else {
+                                        Tab(
+                                            selected = currentPage == tabIndex,
+                                            onClick = {
+                                                coroutineScope.launch {
+                                                    pagerState.animateScrollToPage(tabIndex)
+                                                }
+                                            },
+                                            selectedContentColor = ExtendedTheme.colors.primary,
+                                            unselectedContentColor = ExtendedTheme.colors.textSecondary
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier
+                                                    .height(48.dp)
+                                                    .padding(horizontal = 16.dp)
+                                            ) {
+                                                Text(
+                                                    text = tab.tabName,
+                                                    style = tabTextStyle
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             if (forumInfo != null) {
-                                HorizontalPager(
+                                LazyLoadHorizontalPager(
                                     state = pagerState,
                                     modifier = Modifier.fillMaxSize(),
                                     key = { it },
                                     verticalAlignment = Alignment.Top,
                                     userScrollEnabled = true,
-                                ) {
-                                    ForumThreadListPage(
-                                        forumId = forumInfo!!.get { id },
-                                        forumName = forumInfo!!.get { name },
-                                        isGood = it == 1,
-                                        lazyListState = if (it == 0) latestListState else goodListState
-                                    )
+                                ) { pageIndex ->
+                                    when (pageIndex) {
+                                        0, 1 -> ForumThreadListPage(
+                                            forumId = forumInfo!!.get { id },
+                                            forumName = forumInfo!!.get { name },
+                                            isGood = pageIndex == 1,
+                                            lazyListState = if (pageIndex == 0) latestListState else goodListState
+                                        )
+                                        else -> {
+                                            val tabIndex = pageIndex - 2
+                                            if (tabIndex < generalTabs.size) {
+                                                GeneralTabListPage(
+                                                    forumId = forumInfo!!.get { id },
+                                                    forumName = forumInfo!!.get { name },
+                                                    navTabInfo = generalTabs[tabIndex],
+                                                    viewModel = pageViewModel(key = "general_tab_$tabIndex"),
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }

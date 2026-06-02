@@ -114,19 +114,17 @@ fun LoadMoreLayout(
         curLazyListState?.let { state ->
             snapshotFlow {
                 val shouldPreload =
-                    !curIsEmpty && curCanLoadMore && !curIsLoading && curPreloadCount > 0
+                    !curIsEmpty && curCanLoadMore && curPreloadCount > 0
                 val isInPreloadRange =
                     state.firstVisibleItemIndex + state.layoutInfo.visibleItemsInfo.size - 1 >= state.layoutInfo.totalItemsCount - curPreloadCount
-                shouldPreload && isInPreloadRange
+                shouldPreload && isInPreloadRange && state.layoutInfo.totalItemsCount > 0
             }
                 .distinctUntilChanged()
                 .collect {
-                    if (it) {
-                        val curTime = System.currentTimeMillis()
+                    if (it && !curIsLoading) {
                         coroutineScope.launch {
-                            loadMoreFlow.emit(curTime)
+                            loadMoreFlow.emit(System.currentTimeMillis())
                         }
-                        curTime - lastTriggerTime >= 500
                     }
                 }
         }
