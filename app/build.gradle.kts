@@ -49,6 +49,10 @@ wire {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 android {
     buildToolsVersion = "36.0.0"
     compileSdk = 36
@@ -135,11 +139,6 @@ android {
                 "${variant.buildType.name}-${applicationVersionName}(${applicationVersionCode}).apk"
 
             (this as BaseVariantOutputImpl).outputFileName = fileName
-        }
-        kotlin.sourceSets {
-            getByName(variant.name) {
-                kotlin.srcDir("build/generated/ksp/${variant.name}/kotlin")
-            }
         }
     }
 }

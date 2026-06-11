@@ -24,7 +24,7 @@ import dagger.hilt.components.SingletonComponent
         SearchPostHistory::class,
     ],
     version = 39,
-    exportSchema = false,
+    exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun accountDao(): AccountDao
