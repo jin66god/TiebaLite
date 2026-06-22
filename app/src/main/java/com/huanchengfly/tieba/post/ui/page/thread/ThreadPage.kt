@@ -122,7 +122,9 @@ import com.huanchengfly.tieba.post.models.database.History
 import com.huanchengfly.tieba.post.toJson
 import com.huanchengfly.tieba.post.toastShort
 import com.huanchengfly.tieba.post.ui.common.PbContentRender
+import com.huanchengfly.tieba.post.ui.common.PicContentRender
 import com.huanchengfly.tieba.post.ui.common.PbContentText
+import com.huanchengfly.tieba.post.ui.common.PicWaterfallContentRender
 import com.huanchengfly.tieba.post.ui.common.theme.compose.ExtendedTheme
 import com.huanchengfly.tieba.post.ui.common.theme.compose.invertChipBackground
 import com.huanchengfly.tieba.post.ui.common.theme.compose.invertChipContent
@@ -2190,7 +2192,19 @@ fun PostCard(
                             )
                         }
 
-                        contentRenders.fastForEach { it.Render() }
+                        var waterfallImages: MutableList<PicContentRender>? = null
+
+                        contentRenders.forEach { render ->
+                            if (render is PicContentRender) {
+                                if (waterfallImages == null) waterfallImages = mutableListOf()
+                                waterfallImages!!.add(render)
+                            } else {
+                                waterfallImages?.let { PicWaterfallContentRender(it) }
+                                waterfallImages = null
+                                render.Render()
+                            }
+                        }
+                        waterfallImages?.let { PicWaterfallContentRender(it) }
                     }
 
                     if (showSubPosts && post.sub_post_number > 0 && subPosts.isNotEmpty() && !immersiveMode) {
