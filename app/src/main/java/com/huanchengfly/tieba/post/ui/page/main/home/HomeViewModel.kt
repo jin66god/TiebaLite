@@ -178,13 +178,14 @@ sealed interface HomePartialChange : PartialChange<HomeUiState> {
             when (this) {
                 is Success -> oldState.copy(
                     isLoading = false,
+                    hasLoaded = true,
                     forums = forums.toImmutableList(),
                     topForums = topForums.toImmutableList(),
                     historyForums = historyForums.toImmutableList(),
                     error = null
                 )
 
-                is Failure -> oldState.copy(isLoading = false, error = error)
+                is Failure -> oldState.copy(isLoading = false, hasLoaded = true, error = error)
                 Start -> oldState.copy(isLoading = true)
             }
 
@@ -265,6 +266,7 @@ sealed interface HomePartialChange : PartialChange<HomeUiState> {
 @Immutable
 data class HomeUiState(
     val isLoading: Boolean = false,
+    val hasLoaded: Boolean = false,
     val forums: ImmutableList<Forum> = persistentListOf(),
     val topForums: ImmutableList<Forum> = persistentListOf(),
     val historyForums: ImmutableList<History> = persistentListOf(),

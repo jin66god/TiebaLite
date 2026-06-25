@@ -453,8 +453,15 @@ fun HomePage(
         prop1 = HomeUiState::error,
         initial = null
     )
+    val hasLoaded by viewModel.uiState.collectPartialAsState(
+        prop1 = HomeUiState::hasLoaded,
+        initial = false
+    )
     val isLoggedIn = remember(account) { account != null }
     val isEmpty by remember { derivedStateOf { forums.isEmpty() } }
+    val showEmptyState by remember {
+        derivedStateOf { isEmpty && (!isLoggedIn || hasLoaded) }
+    }
     val hasTopForum by remember { derivedStateOf { topForums.isNotEmpty() } }
     val showHistoryForum by remember { derivedStateOf { context.appPreferences.homePageShowHistoryForum && historyForums.isNotEmpty() } }
     var listSingle by remember { mutableStateOf(context.appPreferences.listSingle) }
@@ -531,7 +538,7 @@ fun HomePage(
                     navigator.navigate(SearchPageDestination)
                 }
                 StateScreen(
-                    isEmpty = isEmpty,
+                    isEmpty = showEmptyState,
                     isError = isError,
                     isLoading = isLoading,
                     modifier = Modifier
