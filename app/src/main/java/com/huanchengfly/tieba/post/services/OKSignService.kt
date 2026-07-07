@@ -234,8 +234,8 @@ class OKSignService : IntentService(TAG), CoroutineScope, ProgressListener {
     override fun onFailure(current: Int, total: Int, errorCode: Int, errorMsg: String) {
         lastSignData.let {
             if (it == null) {
-                ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_DETACH)
                 updateNotification(getString(R.string.title_oksign_fail), errorMsg)
+                ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_DETACH)
             } else {
                 updateNotification(
                     getString(R.string.title_oksign_fail),
