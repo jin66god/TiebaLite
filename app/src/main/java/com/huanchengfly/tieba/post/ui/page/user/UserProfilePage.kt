@@ -150,7 +150,9 @@ fun UserProfilePage(
 
     LazyLoad(loaded = viewModel.initialized) {
         viewModel.send(UserProfileUiIntent.Refresh(uid))
-        viewModel.send(UserProfileUiIntent.GetUserBlackInfo(uid))
+        if (account != null) {
+            viewModel.send(UserProfileUiIntent.GetUserBlackInfo(uid))
+        }
         viewModel.initialized = true
     }
 
