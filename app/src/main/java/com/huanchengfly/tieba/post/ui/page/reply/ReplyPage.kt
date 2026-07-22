@@ -271,6 +271,10 @@ internal fun ReplyPageContent(
     val curTextFlow = remember { MutableStateFlow("") }
     val curText by curTextFlow.collectAsState()
     LaunchedEffect(Unit) {
+        val draft = DatabaseUtil.getDraft(hash)
+        if (draft != null) {
+            setText(draft.content)
+        }
         curTextFlow
             .sample(500)
             .distinctUntilChanged()
@@ -280,12 +284,6 @@ internal fun ReplyPageContent(
                     DatabaseUtil.saveDraft(hash, it)
                 }
             }
-    }
-    LaunchedEffect(Unit) {
-        val draft = DatabaseUtil.getDraft(hash)
-        if (draft != null) {
-            setText(draft.content)
-        }
     }
     val textLength by remember { derivedStateOf { curText.length } }
     val isTextEmpty by remember { derivedStateOf { curText.isEmpty() } }

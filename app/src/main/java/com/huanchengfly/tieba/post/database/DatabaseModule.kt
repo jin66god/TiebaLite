@@ -11,6 +11,14 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+private val MIGRATION_39_40 = Migration(39, 40) { db ->
+    db.execSQL("CREATE TABLE IF NOT EXISTS `draft_new` (`id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, `hash` TEXT NOT NULL UNIQUE, `content` TEXT NOT NULL)")
+    db.execSQL("INSERT OR REPLACE INTO `draft_new` (`id`, `hash`, `content`) SELECT `id`, `hash`, `content` FROM `draft` WHERE `id` IN (SELECT MAX(`id`) FROM `draft` GROUP BY `hash`)")
+    db.execSQL("DROP TABLE IF EXISTS `draft`")
+    db.execSQL("ALTER TABLE `draft_new` RENAME TO `draft`")
+    db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_draft_hash` ON `draft` (`hash`)")
+}
+
 private val MIGRATION_38_39 = Migration(38, 39) { db ->
     // 1. 重建 account 表
     db.execSQL("ALTER TABLE `account` RENAME TO `account_old`")
@@ -62,7 +70,7 @@ object DatabaseModule {
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(context, AppDatabase::class.java, "tblite.db")
-            .addMigrations(MIGRATION_38_39)
+            .addMigrations(MIGRATION_38_39, MIGRATION_39_40)
             .build()
     }
 

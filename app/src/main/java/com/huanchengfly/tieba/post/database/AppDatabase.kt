@@ -23,7 +23,7 @@ import dagger.hilt.components.SingletonComponent
         SearchHistory::class,
         SearchPostHistory::class,
     ],
-    version = 39,
+    version = 40,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
