@@ -82,6 +82,7 @@ import com.huanchengfly.tieba.post.arch.ImmutableHolder
 import com.huanchengfly.tieba.post.arch.collectPartialAsState
 import com.huanchengfly.tieba.post.arch.emitGlobalEvent
 import com.huanchengfly.tieba.post.arch.getOrNull
+import com.huanchengfly.tieba.post.arch.onEvent
 import com.huanchengfly.tieba.post.arch.pageViewModel
 import com.huanchengfly.tieba.post.goToActivity
 import com.huanchengfly.tieba.post.models.PhotoViewData
@@ -153,9 +154,6 @@ fun UserProfilePage(
 
     LazyLoad(loaded = viewModel.initialized) {
         viewModel.send(UserProfileUiIntent.Refresh(uid))
-        if (account != null) {
-            viewModel.send(UserProfileUiIntent.GetUserBlackInfo(uid))
-        }
         viewModel.initialized = true
     }
 
@@ -176,11 +174,6 @@ fun UserProfilePage(
         initial = false
     )
 
-    val permList by viewModel.uiState.collectPartialAsState(
-        prop1 = UserProfileUiState::permList,
-        initial = null
-    )
-
     val isError by remember {
         derivedStateOf { error != null }
     }
@@ -188,9 +181,16 @@ fun UserProfilePage(
         derivedStateOf { user == null }
     }
     val permissionSettingDialogDialogState = rememberDialogState()
+    var dialogPermissionList by remember {
+        mutableStateOf(PermissionListBean())
+    }
+    viewModel.onEvent<UserProfileUiEvent.ShowPermissionSettingDialog> {
+        dialogPermissionList = it.permList
+        permissionSettingDialogDialogState.show()
+    }
     PermissionSettingDialogM2(
         dialogState = permissionSettingDialogDialogState,
-        initialPermissionList = permList?.item ?: PermissionListBean(),
+        initialPermissionList = dialogPermissionList,
         onConfirm = { updatedBean ->
             viewModel.send(UserProfileUiIntent.SetUserBlack(uid, account!!.tbs, updatedBean))
         }
@@ -228,7 +228,7 @@ fun UserProfilePage(
                             )
                         )
                     },
-                    onSetUserBlack = { permissionSettingDialogDialogState.show() },
+                    onSetUserBlack = { viewModel.send(UserProfileUiIntent.GetUserBlackInfo(uid)) },
                 )
             }
         }
@@ -1103,24 +1103,26 @@ private fun UserProfileDetail(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        user.getNullableImmutable { bazhu_grade }?.let {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Verified,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = ExtendedTheme.colors.primary,
-                )
-                Text(
-                    text = it.get { desc },
-                    style = MaterialTheme.typography.body2,
-                    color = ExtendedTheme.colors.primary,
-                )
-            }
-        } ?: user.getNullableImmutable { new_god_data }
+        user.getNullableImmutable { bazhu_grade }
+            ?.takeIf { it.get { desc }.isNotBlank() }
+            ?.let {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Verified,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = ExtendedTheme.colors.primary,
+                    )
+                    Text(
+                        text = it.get { desc },
+                        style = MaterialTheme.typography.body2,
+                        color = ExtendedTheme.colors.primary,
+                    )
+                }
+            } ?: user.getNullableImmutable { new_god_data }
             ?.takeIf { it.get { status } != 0 }
             ?.let {
                 Row(
@@ -1153,7 +1155,7 @@ private fun UserProfileDetail(
             Chip(
                 text = stringResource(
                     id = R.string.text_profile_user_id,
-                    user.get { tieba_uid }.toString()
+                    user.get { tieba_uid }
                 ),
                 appendIcon = {
                     Icon(
