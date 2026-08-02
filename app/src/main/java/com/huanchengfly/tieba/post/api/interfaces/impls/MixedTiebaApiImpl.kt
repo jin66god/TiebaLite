@@ -23,6 +23,7 @@ import com.huanchengfly.tieba.post.api.models.CollectDataBean
 import com.huanchengfly.tieba.post.api.models.CommonResponse
 import com.huanchengfly.tieba.post.api.models.ForumGuideBean
 import com.huanchengfly.tieba.post.api.models.FollowBean
+import com.huanchengfly.tieba.post.api.models.FollowListBean
 import com.huanchengfly.tieba.post.api.models.ForumPageBean
 import com.huanchengfly.tieba.post.api.models.ForumRecommend
 import com.huanchengfly.tieba.post.api.models.GetForumListBean
@@ -661,6 +662,32 @@ object MixedTiebaApiImpl : ITiebaApi {
         portrait: String,
         tbs: String
     ): Flow<CommonResponse> = RetrofitTiebaApi.OFFICIAL_TIEBA_API.unfollowFlow(portrait, tbs)
+
+    override fun followListFlow(page: Int, uid: Long?): Flow<FollowListBean> =
+        RetrofitTiebaApi.OFFICIAL_TIEBA_API.followListFlow(page, uid)
+
+    override fun getAllFollowFlow(uid: Long?): Flow<FollowListBean> = flow {
+        var currentPage = 1
+        var hasMore = true
+        var finalBean: FollowListBean? = null
+        val allUsers = mutableListOf<FollowListBean.FollowUserBean>()
+
+        while (hasMore) {
+            val response = followListFlow(currentPage, uid).first()
+            if (finalBean == null) {
+                finalBean = response
+            }
+            allUsers.addAll(response.followList)
+            hasMore = response.hasMore == 1
+            currentPage++
+        }
+
+        finalBean?.apply {
+            this.followList = allUsers
+        }?.let {
+            emit(it)
+        }
+    }.flowOn(Dispatchers.IO)
 
     override fun hotMessageList(): Call<HotMessageListBean> =
         RetrofitTiebaApi.WEB_TIEBA_API.hotMessageList()
