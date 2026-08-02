@@ -737,12 +737,14 @@ fun ThreadPage(
     }
 
     val updateCollectMarkDialogState = rememberDialogState()
+    var collectPromptHandled by remember { mutableStateOf(false) }
     var readFloorBeforeBack by remember {
         mutableIntStateOf(1)
     }
     ConfirmDialog(
         dialogState = updateCollectMarkDialogState,
         onConfirm = {
+            collectPromptHandled = true
             coroutineScope.launch {
                 navigator.navigateUp()
                 if (lastVisibilityPostId != 0L) {
@@ -761,13 +763,20 @@ fun ThreadPage(
             }
         },
         onCancel = {
+            collectPromptHandled = true
             navigator.navigateUp()
+        },
+        onDismiss = {
+            if (!collectPromptHandled) {
+                collectPromptHandled = true
+                navigator.navigateUp()
+            }
         }
     ) {
         Text(text = stringResource(R.string.message_update_collect_mark, readFloorBeforeBack))
     }
     MyBackHandler(
-        enabled = isCollected && !bottomSheetState.isVisible,
+        enabled = isCollected && !bottomSheetState.isVisible && !updateCollectMarkDialogState.show,
         currentScreen = ThreadPageDestination
     ) {
         readFloorBeforeBack = lastVisibilityPost?.get { floor } ?: 0
