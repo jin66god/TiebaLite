@@ -1,6 +1,9 @@
 package com.huanchengfly.tieba.post.ui.page.forum
 
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.huanchengfly.tieba.post.api.TiebaApi
 import com.huanchengfly.tieba.post.api.models.CommonResponse
 import com.huanchengfly.tieba.post.api.models.LikeForumResultBean
@@ -29,10 +32,18 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
+data class ListScrollPosition(val index: Int = 0, val offset: Int = 0)
+
 @Stable
 @HiltViewModel
 class ForumViewModel @Inject constructor() :
     BaseViewModel<ForumUiIntent, ForumPartialChange, ForumUiState, ForumUiEvent>() {
+    /** 帖子列表滚动位置快照（latest=最新 / good=精华 两个 tab）。存于背栈级 ViewModel，
+     *  跨「退出帖子」返回存活，返回时用其恢复滚动 —— 修复偶发回到顶部。 */
+    var latestThreadListScroll by mutableStateOf(ListScrollPosition())
+
+    var goodThreadListScroll by mutableStateOf(ListScrollPosition())
+
     override fun createInitialState(): ForumUiState = ForumUiState()
 
     override fun createPartialChangeProducer(): PartialChangeProducer<ForumUiIntent, ForumPartialChange, ForumUiState> =

@@ -23,7 +23,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -467,6 +469,33 @@ fun ForumPage(
     }
 
     val currentListState = if (currentPage == 0) latestListState else goodListState
+
+    // 把帖子列表滚动位置快照到背栈级 ViewModel（跨「退出帖子」返回存活），返回时恢复，修复偶发回到顶部。
+    LaunchedEffect(latestListState) {
+        snapshotFlow { latestListState.firstVisibleItemIndex to latestListState.firstVisibleItemScrollOffset }
+            .collect { (i, o) -> viewModel.latestThreadListScroll = ListScrollPosition(i, o) }
+    }
+    LaunchedEffect(goodListState) {
+        snapshotFlow { goodListState.firstVisibleItemIndex to goodListState.firstVisibleItemScrollOffset }
+            .collect { (i, o) -> viewModel.goodThreadListScroll = ListScrollPosition(i, o) }
+    }
+    LaunchedEffect(Unit) {
+        suspend fun restoreScroll(state: LazyListState, pos: ListScrollPosition) {
+            if (pos.index <= 0 && pos.offset <= 0) return
+            try {
+                var n = 0
+                while (n < 100) {
+                    val count = state.layoutInfo.totalItemsCount
+                    if (count > pos.index) { state.scrollToItem(pos.index, pos.offset.coerceAtLeast(0)); return }
+                    if (count > 0 && pos.index >= count) { state.scrollToItem(count - 1); return }
+                    if (count == 0 && n >= 30) return
+                    delay(16); n++
+                }
+            } catch (_: Throwable) {}
+        }
+        restoreScroll(latestListState, viewModel.latestThreadListScroll)
+        restoreScroll(goodListState, viewModel.goodThreadListScroll)
+    }
 
     val coroutineScope = rememberCoroutineScope()
 
