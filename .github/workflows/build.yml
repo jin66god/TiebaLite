@@ -6,6 +6,8 @@ on:
   push:
     branches:
       - '4.0-dev'
+    paths-ignore:
+      - '.github/workflows/**'
     tags:
       - 'v*'
 
@@ -56,6 +58,16 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleRelease
 
+      - name: Read Commit Message
+        id: read_commit_message
+        shell: bash
+        run: |
+          {
+            echo 'message<<EOF'
+            git log -1 --pretty=%B
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
       - name: Read Output Metadata
         id: read_output_metadata
         uses: juliangruber/read-file-action@v1
@@ -75,6 +87,10 @@ jobs:
           prerelease: ${{ ! startsWith(github.ref, 'refs/tags/') }}
           generate_release_notes: true
           body: |
+            ## 更新内容
+
+            ${{ steps.read_commit_message.outputs.message }}
+
             ## 构建信息
 
             - 版本：`${{ env.version_name }}`
