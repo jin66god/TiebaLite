@@ -52,8 +52,3 @@ cd TiebaLite
 ## 📄 更新日志
 
 - **2026-08**：移除启动时的「正在请求发送通知权限」横幅提示，不再强制弹窗请求通知权限，改为按需授权
-
-## 🔗 友情链接
-
-- [Starry-OvO/aiotieba: Asynchronous I/O Client for Baidu Tieba](https://github.com/Starry-OvO/aiotieba)
-- [n0099/tbclient.protobuf: 百度贴吧客户端 Protocol Buffers 定义文件合集](https://github.com/n0099/tbclient.protobuf)
