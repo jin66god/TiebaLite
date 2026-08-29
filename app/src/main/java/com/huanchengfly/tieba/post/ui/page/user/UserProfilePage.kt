@@ -128,7 +128,6 @@ import com.huanchengfly.tieba.post.utils.StringUtil.getShortNumString
 import com.huanchengfly.tieba.post.utils.TiebaUtil
 import com.huanchengfly.tieba.post.ui.page.LocalNavigator
 import com.huanchengfly.tieba.post.ui.page.destinations.FollowListPageDestination
-import com.huanchengfly.tieba.post.ui.page.user.followlist.FollowListType
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.collections.immutable.ImmutableList
@@ -1068,15 +1067,7 @@ private fun UserProfileDetail(
                 HorizontalDivider(modifier = Modifier.fillMaxHeight())
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.clickable {
-                        navigator.navigate(
-                            FollowListPageDestination(
-                                user.get { id },
-                                FollowListType.FANS
-                            )
-                        )
-                    }
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
                         text = stringResource(id = R.string.text_stat_fans),

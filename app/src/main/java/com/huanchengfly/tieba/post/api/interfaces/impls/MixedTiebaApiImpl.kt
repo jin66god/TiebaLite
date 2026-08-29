@@ -23,7 +23,6 @@ import com.huanchengfly.tieba.post.api.models.CollectDataBean
 import com.huanchengfly.tieba.post.api.models.CommonResponse
 import com.huanchengfly.tieba.post.api.models.ForumGuideBean
 import com.huanchengfly.tieba.post.api.models.FollowBean
-import com.huanchengfly.tieba.post.api.models.FansListBean
 import com.huanchengfly.tieba.post.api.models.FollowListBean
 import com.huanchengfly.tieba.post.api.models.ForumPageBean
 import com.huanchengfly.tieba.post.api.models.ForumRecommend
@@ -666,9 +665,6 @@ object MixedTiebaApiImpl : ITiebaApi {
 
     override fun followListFlow(page: Int, uid: Long?): Flow<FollowListBean> =
         RetrofitTiebaApi.OFFICIAL_TIEBA_API.followListFlow(page, uid)
-
-    override fun fansListFlow(page: Int, uid: Long?): Flow<FansListBean> =
-        RetrofitTiebaApi.OFFICIAL_TIEBA_API.fansListFlow(page, uid)
 
     override fun getAllFollowFlow(uid: Long?): Flow<FollowListBean> = flow {
         var currentPage = 1

@@ -73,7 +73,6 @@ private enum class FollowListFilter { All, Mutual }
 @Composable
 fun FollowListPage(
     uid: Long = 0,
-    type: FollowListType = FollowListType.FOLLOW,
     navigator: DestinationsNavigator,
     viewModel: FollowListViewModel = pageViewModel(),
 ) {
@@ -81,9 +80,9 @@ fun FollowListPage(
 
     fun refresh() {
         if (showActions) {
-            viewModel.send(FollowListUiIntent.Refresh(type = type))
+            viewModel.send(FollowListUiIntent.Refresh())
         } else {
-            viewModel.send(FollowListUiIntent.Refresh(type = type, uid = uid))
+            viewModel.send(FollowListUiIntent.Refresh(uid))
         }
     }
 
@@ -149,12 +148,7 @@ fun FollowListPage(
             TitleCentredToolbar(
                 title = {
                     Text(
-                        text = stringResource(
-                            id = when (type) {
-                                FollowListType.FOLLOW -> R.string.title_follow_list
-                                FollowListType.FANS -> R.string.title_fans_list
-                            }
-                        ),
+                        text = stringResource(id = R.string.title_follow_list),
                         style = MaterialTheme.typography.h6,
                         fontWeight = FontWeight.Bold
                     )
@@ -175,11 +169,7 @@ fun FollowListPage(
                 onFilterChange = { filter = it },
                 totalFollowNum = totalFollowNum,
                 tipsText = tipsText,
-                showFilter = showActions && type == FollowListType.FOLLOW,
-                countTextRes = when (type) {
-                    FollowListType.FOLLOW -> R.string.text_follow_list_count
-                    FollowListType.FANS -> R.string.text_fans_list_count
-                },
+                showFilter = showActions,
             )
             Box(
                 modifier = Modifier
@@ -209,9 +199,9 @@ fun FollowListPage(
                             onLoadMore = {
                                 if (hasMore) {
                                     if (showActions) {
-                                        viewModel.send(FollowListUiIntent.LoadMore(type = type, page = currentPage))
+                                        viewModel.send(FollowListUiIntent.LoadMore(currentPage))
                                     } else {
-                                        viewModel.send(FollowListUiIntent.LoadMore(type = type, page = currentPage, uid = uid))
+                                        viewModel.send(FollowListUiIntent.LoadMore(currentPage, uid))
                                     }
                                 }
                             },
@@ -276,7 +266,6 @@ private fun FollowListHeader(
     totalFollowNum: Int,
     tipsText: String?,
     showFilter: Boolean = true,
-    countTextRes: Int = R.string.text_follow_list_count,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -288,7 +277,7 @@ private fun FollowListHeader(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = stringResource(id = countTextRes, totalFollowNum),
+                text = stringResource(id = R.string.text_follow_list_count, totalFollowNum),
                 style = MaterialTheme.typography.body2,
                 color = ExtendedTheme.colors.textSecondary
             )
