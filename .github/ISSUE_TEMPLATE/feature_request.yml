@@ -1,0 +1,40 @@
+name: ✨ 功能建议
+description: 提出新功能、改进或体验优化建议
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 感谢你的建议！
+        描述清楚需求和使用场景，帮助判断是否值得实现。
+
+  - type: textarea
+    id: need
+    attributes:
+      label: 需求描述
+      description: 你想要什么功能 / 改进？解决什么问题？
+      placeholder: 希望能支持 XX……
+    validations:
+      required: true
+
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 使用场景
+      description: 在什么情况下会用到这个功能？
+      placeholder: 例如：逛贴吧时经常需要……
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: 期望的实现方式
+      description: 你理想中的交互 / 界面是什么样？
+      placeholder: 例如：在 XX 页面加一个按钮……
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: 参考示例
+      description: 其他应用 / 网页的同类功能截图或链接
+      placeholder: （可选）截图或链接

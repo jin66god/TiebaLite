@@ -8,6 +8,7 @@ on:
       - '4.0-dev'
     paths-ignore:
       - '.github/workflows/**'
+      - '.github/ISSUE_TEMPLATE/**'
     tags:
       - 'v*'
 
