@@ -286,12 +286,8 @@ class MainActivityV2 : BaseComposeActivity() {
     }
 
     private fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && AccountUtil.isLoggedIn()) {
-            requestPermission {
-                permissions = listOf(PermissionUtils.POST_NOTIFICATIONS)
-                description = getString(R.string.desc_permission_post_notifications)
-            }
-        }
+        // 2026-08 按用户要求禁用：不再在启动时主动请求“发送通知”权限，
+        // 避免每次打开 App 都弹出“正在请求 发送通知 权限”的横幅（无法点击，只能上滑关闭）。
     }
 
     private fun initAutoSign() {
@@ -331,10 +327,6 @@ class MainActivityV2 : BaseComposeActivity() {
             ClientUtils.setActiveTimestamp()
         }
         intent?.let { checkIntent(it) }
-        launch {
-            delay(100)
-            requestNotificationPermission()
-        }
     }
 
     override fun onCreateContent(systemUiController: SystemUIBarsTweaker) {
