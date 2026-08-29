@@ -4,9 +4,6 @@
     <a href="https://github.com/jin66god/TiebaLite/actions/workflows/build.yml">
         <img alt="Build Status" src="https://github.com/jin66god/TiebaLite/actions/workflows/build.yml/badge.svg?branch=4.0-dev">
     </a>
-    <a href="https://t.me/tblite_discuss">
-        <img alt="Status" src="https://img.shields.io/badge/-Telegram-blue?logo=telegram&style=flat">
-    </a>
 </p>
 
 **贴吧 Lite** 是一款**非官方**的百度贴吧客户端，主打简洁、无广告、高度可自定义。
@@ -60,7 +57,3 @@ cd TiebaLite
 
 - [Starry-OvO/aiotieba: Asynchronous I/O Client for Baidu Tieba](https://github.com/Starry-OvO/aiotieba)
 - [n0099/tbclient.protobuf: 百度贴吧客户端 Protocol Buffers 定义文件合集](https://github.com/n0099/tbclient.protobuf)
-
-## 🤝 交流讨论
-
-Telegram：[tblite_discuss](https://t.me/tblite_discuss)
