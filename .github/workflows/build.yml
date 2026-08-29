@@ -32,7 +32,7 @@ jobs:
 
       - name: Decode Keystore
         id: decode_keystore
-        if: startsWith(github.ref, 'refs/tags/') && env.KEYSTORE != ''
+        if: env.KEYSTORE != ''
         uses: timheuer/base64-to-file@v2
         with:
           fileName: ${{ vars.RELEASE_KEYSTORE }}
@@ -40,7 +40,7 @@ jobs:
           encodedString: ${{ secrets.KEYSTORE }}
 
       - name: Generate keystore.properties
-        if: startsWith(github.ref, 'refs/tags/')
+        if: env.KEYSTORE != ''
         run: |
           if [ -n "${{ secrets.RELEASEKEYPASSWORD }}" ]; then
             echo keystore.file="${{ vars.RELEASE_KEYSTORE }}" >> keystore.properties
