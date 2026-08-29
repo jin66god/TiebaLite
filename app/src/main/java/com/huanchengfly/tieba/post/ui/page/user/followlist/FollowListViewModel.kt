@@ -5,6 +5,7 @@ import com.huanchengfly.tieba.post.App
 import com.huanchengfly.tieba.post.R
 import com.huanchengfly.tieba.post.api.TiebaApi
 import com.huanchengfly.tieba.post.api.models.CommonResponse
+import com.huanchengfly.tieba.post.api.models.FansListBean
 import com.huanchengfly.tieba.post.api.models.FollowBean
 import com.huanchengfly.tieba.post.api.models.FollowListBean
 import com.huanchengfly.tieba.post.api.retrofit.exception.getErrorMessage
@@ -75,28 +76,52 @@ class FollowListViewModel @Inject constructor() :
             )
 
         private fun FollowListUiIntent.Refresh.toRefreshPartialChangeFlow(): Flow<FollowListPartialChange.Refresh> =
-            TiebaApi.getInstance().followListFlow(uid = uid)
-                .map<FollowListBean, FollowListPartialChange.Refresh> {
-                    FollowListPartialChange.Refresh.Success(
-                        page = 1,
-                        hasMore = it.hasMore == 1,
-                        totalFollowNum = it.totalFollowNum,
-                        tipsText = it.tipsText,
-                        users = it.followList,
-                    )
-                }
+            when (type) {
+                FollowListType.FOLLOW -> TiebaApi.getInstance().followListFlow(uid = uid)
+                    .map<FollowListBean, FollowListPartialChange.Refresh> {
+                        FollowListPartialChange.Refresh.Success(
+                            page = 1,
+                            hasMore = it.hasMore == 1,
+                            totalFollowNum = it.totalFollowNum,
+                            tipsText = it.tipsText,
+                            users = it.followList,
+                        )
+                    }
+
+                FollowListType.FANS -> TiebaApi.getInstance().fansListFlow(uid = uid)
+                    .map<FansListBean, FollowListPartialChange.Refresh> {
+                        FollowListPartialChange.Refresh.Success(
+                            page = 1,
+                            hasMore = it.hasMore,
+                            totalFollowNum = it.page?.totalCount ?: 0,
+                            tipsText = it.tipsText,
+                            users = it.userList,
+                        )
+                    }
+            }
                 .onStart { emit(FollowListPartialChange.Refresh.Start) }
                 .catch { emit(FollowListPartialChange.Refresh.Failure(it)) }
 
         private fun FollowListUiIntent.LoadMore.toLoadMorePartialChangeFlow(): Flow<FollowListPartialChange.LoadMore> =
-            TiebaApi.getInstance().followListFlow(page + 1, uid)
-                .map<FollowListBean, FollowListPartialChange.LoadMore> {
-                    FollowListPartialChange.LoadMore.Success(
-                        page = it.pageNum,
-                        hasMore = it.hasMore == 1,
-                        users = it.followList,
-                    )
-                }
+            when (type) {
+                FollowListType.FOLLOW -> TiebaApi.getInstance().followListFlow(page + 1, uid)
+                    .map<FollowListBean, FollowListPartialChange.LoadMore> {
+                        FollowListPartialChange.LoadMore.Success(
+                            page = it.pageNum,
+                            hasMore = it.hasMore == 1,
+                            users = it.followList,
+                        )
+                    }
+
+                FollowListType.FANS -> TiebaApi.getInstance().fansListFlow(page + 1, uid)
+                    .map<FansListBean, FollowListPartialChange.LoadMore> {
+                        FollowListPartialChange.LoadMore.Success(
+                            page = it.page?.currentPage ?: page + 1,
+                            hasMore = it.hasMore,
+                            users = it.userList,
+                        )
+                    }
+            }
                 .onStart { emit(FollowListPartialChange.LoadMore.Start) }
                 .catch { emit(FollowListPartialChange.LoadMore.Failure(it)) }
 
@@ -118,9 +143,19 @@ class FollowListViewModel @Inject constructor() :
     }
 }
 
+enum class FollowListType { FOLLOW, FANS }
+
 sealed interface FollowListUiIntent : UiIntent {
-    data class Refresh(val uid: Long? = null) : FollowListUiIntent
-    data class LoadMore(val page: Int, val uid: Long? = null) : FollowListUiIntent
+    data class Refresh(
+        val type: FollowListType = FollowListType.FOLLOW,
+        val uid: Long? = null,
+    ) : FollowListUiIntent
+
+    data class LoadMore(
+        val type: FollowListType = FollowListType.FOLLOW,
+        val page: Int,
+        val uid: Long? = null,
+    ) : FollowListUiIntent
     data class Unfollow(
         val userId: Long,
         val portrait: String,
